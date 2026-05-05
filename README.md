@@ -1,16 +1,66 @@
-# React + Vite
+# Movie Search App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is a React-based web application that allows users to search for movies using the OMDB API. Users can view detailed information about movies and manage a list of their favorite titles.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+* Search movies by title
+* Display search results with posters, titles, and release years
+* View detailed information for each movie (plot, genre, cast, ratings)
+* Pagination support for navigating through results
+* Add and remove movies from favorites
+* Client-side routing using React Router
+* Error handling for invalid searches and API issues
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+* React JS
+* React Router
+* Tailwind CSS
+* JavaScript
+* OMDB API
+
+---
+
+## Setup Instructions
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/nandinik7/movie-search-app.git
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Run the development server:
+
+```bash
+npm run dev
+```
+
+## API Used
+
+OMDB API
+https://www.omdbapi.com/
+
+---
+
+## Notes
+
+* An API key is required to fetch movie data from OMDB
+* Favorites are stored locally in the browser
+* The application is built with a focus on clean UI and usability
+
+---
+
+## Author
+
+Nandini
