@@ -1,21 +1,22 @@
-import { useState, useEffect } from "react";
-import { Routes, Route, Link } from "react-router-dom";
-import MovieDetails from "./MovieDetails";
+import { useEffect, useState } from "react";
+import { Routes, Route, Link, useNavigate, useParams } from "react-router-dom";
 
-function App() {
+const API_KEY = "60034897";
+
+function Home() {
   const [search, setSearch] = useState("");
   const [movies, setMovies] = useState([]);
   const [page, setPage] = useState(1);
   const [type, setType] = useState("");
   const [favorites, setFavorites] = useState([]);
+  const [message, setMessage] = useState("");
 
-  const API_KEY = "60034897";
-
-  // 🎬 Fetch Movies
   const fetchMovies = async () => {
     if (!search) return;
 
     try {
+      setMessage("");
+
       const res = await fetch(
         `https://www.omdbapi.com/?apikey=${API_KEY}&s=${search}&type=${type}&page=${page}`
       );
@@ -26,178 +27,251 @@ function App() {
         setMovies(data.Search);
       } else {
         setMovies([]);
+        setMessage(data.Error);
       }
     } catch (error) {
-      console.log(error);
-      setMovies([]);
+      setMessage("Something went wrong!");
     }
   };
 
-  // 🔁 Fetch on page/type change
   useEffect(() => {
-    if (search) fetchMovies();
+    if (search) {
+      fetchMovies();
+    }
   }, [page, type]);
 
-  // ⭐ Load favorites from localStorage
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("favorites")) || [];
-    setFavorites(saved);
-  }, []);
+  const addFavorite = (movie) => {
+    const alreadyExists = favorites.find(
+      (fav) => fav.imdbID === movie.imdbID
+    );
 
-  // 💾 Save favorites
-  useEffect(() => {
-    localStorage.setItem("favorites", JSON.stringify(favorites));
-  }, [favorites]);
-
-  // ⭐ Toggle favorite
-  const toggleFavorite = (movie) => {
-    const exists = favorites.find((m) => m.imdbID === movie.imdbID);
-
-    if (exists) {
-      setFavorites(favorites.filter((m) => m.imdbID !== movie.imdbID));
-    } else {
+    if (!alreadyExists) {
       setFavorites([...favorites, movie]);
     }
   };
 
   return (
-    <div className="bg-black min-h-screen text-white p-5">
+    <div className="min-h-screen bg-black text-white p-5">
+      <h1 className="text-5xl font-bold text-center mb-10">
+        Movie Search App 🎬
+      </h1>
 
-      <Routes>
-
-        {/* HOME PAGE */}
-        <Route
-          path="/"
-          element={
-            <>
-              <h1 className="text-3xl text-center mb-6">
-                Movie Search App 🎬
-              </h1>
-
-              {/* ⭐ FAVORITES */}
-              {favorites.length > 0 && (
-                <div className="mb-6">
-                  <h2 className="text-xl mb-2">⭐ Favorites</h2>
-
-                  <div className="flex gap-3 overflow-x-auto">
-                    {favorites.map((movie) => (
-                      <div
-                        key={movie.imdbID}
-                        className="bg-white text-black p-2 rounded"
-                      >
-                        <img
-                          src={
-                            movie.Poster !== "N/A"
-                              ? movie.Poster
-                              : "https://via.placeholder.com/150"
-                          }
-                          alt={movie.Title}
-                          className="w-32 h-40 object-cover"
-                        />
-                        <p className="text-sm">{movie.Title}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 🔍 SEARCH + FILTER */}
-              <div className="flex justify-center gap-3 mb-6">
-                <input
-                  type="text"
-                  placeholder="Search movies..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="px-4 py-2 rounded w-80 bg-gray-900 text-white border border-gray-600 placeholder-gray-400"
-                />
-
-                <select
-                  value={type}
-                  onChange={(e) => {
-                    setType(e.target.value);
-                    setPage(1);
-                  }}
-                  className="px-3 py-2 rounded text-black"
-                >
-                  <option value="">All</option>
-                  <option value="movie">Movies</option>
-                  <option value="series">Series</option>
-                  <option value="episode">Episodes</option>
-                </select>
-
-                <button
-                  onClick={() => {
-                    setPage(1);
-                    fetchMovies();
-                  }}
-                  className="bg-red-500 px-4 py-2 rounded"
-                >
-                  Search
-                </button>
-              </div>
-
-              {/* 🎬 MOVIES GRID */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {movies.map((movie) => (
-                  <Link key={movie.imdbID} to={`/movie/${movie.imdbID}`}>
-                    <div className="bg-white text-black p-3 rounded hover:scale-105 transition">
-                      <img
-                        src={
-                          movie.Poster !== "N/A"
-                            ? movie.Poster
-                            : "https://via.placeholder.com/300"
-                        }
-                        alt={movie.Title}
-                        className="w-full h-64 object-cover"
-                      />
-
-                      <h2 className="font-bold mt-2">{movie.Title}</h2>
-                      <p>{movie.Year}</p>
-
-                      {/* ⭐ BUTTON */}
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          toggleFavorite(movie);
-                        }}
-                        className="mt-2 bg-yellow-400 px-2 py-1 rounded"
-                      >
-                        ⭐
-                      </button>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-
-              {/* 🔁 PAGINATION */}
-              {movies.length > 0 && (
-                <div className="flex justify-center gap-4 mt-6">
-                  <button
-                    onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                    className="bg-gray-700 px-4 py-2 rounded"
-                  >
-                    Prev
-                  </button>
-
-                  <span>Page {page}</span>
-
-                  <button
-                    onClick={() => setPage((p) => p + 1)}
-                    className="bg-gray-700 px-4 py-2 rounded"
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-            </>
-          }
+      <div className="flex flex-col md:flex-row gap-4 justify-center items-center mb-10">
+        <input
+          type="text"
+          placeholder="Search movies..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border border-white p-3 rounded w-[300px] bg-black text-white"
         />
 
-        {/* 📄 DETAILS PAGE */}
-        <Route path="/movie/:id" element={<MovieDetails />} />
+        <select
+          value={type}
+          onChange={(e) => {
+            setType(e.target.value);
+            setPage(1);
+          }}
+          className="bg-black text-white border border-white p-3 rounded"
+        >
+          <option value="">All</option>
+          <option value="movie">Movie</option>
+          <option value="series">Series</option>
+          <option value="episode">Episode</option>
+        </select>
 
-      </Routes>
+        <button
+          onClick={() => {
+            setPage(1);
+            fetchMovies();
+          }}
+          className="bg-red-500 hover:bg-red-600 px-6 py-3 rounded text-white font-semibold"
+        >
+          Search
+        </button>
+      </div>
+
+      {movies.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {movies.map((movie) => (
+              <div
+                key={movie.imdbID}
+                className="bg-white text-black rounded-lg overflow-hidden shadow-lg"
+              >
+                <img
+                  src={
+                    movie.Poster !== "N/A"
+                      ? movie.Poster
+                      : "https://via.placeholder.com/300x450"
+                  }
+                  alt={movie.Title}
+                  className="w-full h-[400px] object-cover"
+                />
+
+                <div className="p-4">
+                  <h2 className="text-xl font-bold mb-2">
+                    {movie.Title}
+                  </h2>
+
+                  <p className="mb-2">Year: {movie.Year}</p>
+
+                  <p className="mb-4 capitalize">
+                    Type: {movie.Type}
+                  </p>
+
+                  <div className="flex justify-between">
+                    <Link
+                      to={`/movie/${movie.imdbID}`}
+                      className="bg-blue-500 text-white px-3 py-2 rounded"
+                    >
+                      Details
+                    </Link>
+
+                    <button
+                      onClick={() => addFavorite(movie)}
+                      className="bg-green-500 text-white px-3 py-2 rounded"
+                    >
+                      Favorite
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center gap-5 mt-10">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+              className="bg-gray-700 px-5 py-2 rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            <p className="text-xl">Page {page}</p>
+
+            <button
+              onClick={() => setPage(page + 1)}
+              className="bg-gray-700 px-5 py-2 rounded"
+            >
+              Next
+            </button>
+          </div>
+        </>
+      ) : (
+        <p className="text-center text-gray-400 text-xl">
+          {message || "Search for a movie to see results"}
+        </p>
+      )}
+
+      {favorites.length > 0 && (
+        <div className="mt-16">
+          <h2 className="text-3xl font-bold mb-6 text-center">
+            Favorites ❤️
+          </h2>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+            {favorites.map((movie) => (
+              <div
+                key={movie.imdbID}
+                className="bg-white text-black rounded-lg p-3"
+              >
+                <img
+                  src={movie.Poster}
+                  alt={movie.Title}
+                  className="w-full h-[250px] object-cover rounded"
+                />
+
+                <h3 className="mt-3 font-bold">
+                  {movie.Title}
+                </h3>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function MovieDetails() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [movie, setMovie] = useState(null);
+
+  useEffect(() => {
+    fetchMovieDetails();
+  }, []);
+
+  const fetchMovieDetails = async () => {
+    const res = await fetch(
+      `https://www.omdbapi.com/?apikey=${API_KEY}&i=${id}`
+    );
+
+    const data = await res.json();
+    setMovie(data);
+  };
+
+  if (!movie) {
+    return (
+      <h1 className="text-center text-white mt-20 text-3xl">
+        Loading...
+      </h1>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white p-5">
+      <button
+        onClick={() => navigate(-1)}
+        className="bg-gray-700 px-5 py-2 rounded mb-8"
+      >
+        ⬅ Back
+      </button>
+
+      <div className="max-w-4xl mx-auto text-center">
+        <h1 className="text-4xl font-bold mb-6">
+          {movie.Title}
+        </h1>
+
+        <img
+          src={movie.Poster}
+          alt={movie.Title}
+          className="mx-auto rounded-lg mb-6 w-[300px]"
+        />
+
+        <p className="mb-3 text-xl">
+          <span className="font-bold">Year:</span> {movie.Year}
+        </p>
+
+        <p className="mb-3 text-xl">
+          <span className="font-bold">Genre:</span> {movie.Genre}
+        </p>
+
+        <p className="mb-3 text-xl">
+          <span className="font-bold">Plot:</span> {movie.Plot}
+        </p>
+
+        <p className="mb-3 text-xl">
+          <span className="font-bold">Actors:</span> {movie.Actors}
+        </p>
+
+        <p className="text-xl">
+          <span className="font-bold">IMDB Rating:</span> ⭐{" "}
+          {movie.imdbRating}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/movie/:id" element={<MovieDetails />} />
+    </Routes>
   );
 }
 
